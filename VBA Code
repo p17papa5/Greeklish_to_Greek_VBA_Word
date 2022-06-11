@@ -1,0 +1,97 @@
+Sub Greeklish_to_Greek()
+    
+    Dim text As String
+    Dim pl As Integer, g As Integer, gh As Integer
+    Dim letter As String, myLatin  As String
+    Dim V, Greek, GreekDia, GreekDia2, GreekDia3, Latin, LatinDia, LatinDia2, LatinDia3
+    Dim bDiacritic As Boolean, DiaArraySize As Long, DiaArrayType As String
+    
+    text = Selection
+    
+    Greek = VBA.Array(ChrW(&H391), ChrW(&H392), ChrW(&H393), ChrW(&H394), ChrW(&H395), ChrW(&H396), ChrW(&H397), ChrW(&H398), ChrW(&H399), ChrW(&H39A), ChrW(&H39B), _
+    ChrW(&H39C), ChrW(&H39D), ChrW(&H39E), ChrW(&H39F), ChrW(&H3A0), ChrW(&H3A1), ChrW(&H3A3), ChrW(&H3A4), ChrW(&H3A5), ChrW(&H3A6), ChrW(&H3A7), ChrW(&H3A8), ChrW(&H3A9), _
+    ChrW(&H3B1), ChrW(&H3B2), ChrW(&H3B3), ChrW(&H3B4), ChrW(&H3B5), ChrW(&H3B6), ChrW(&H3B7), ChrW(&H3B8), ChrW(&H3B9), ChrW(&H3BA), ChrW(&H3BB), _
+    ChrW(&H3BC), ChrW(&H3BD), ChrW(&H3BE), ChrW(&H3BF), ChrW(&H3C0), ChrW(&H3C1), ChrW(&H3C3), ChrW(&H3C4), ChrW(&H3C5), ChrW(&H3C6), ChrW(&H3C7), ChrW(&H3C8), ChrW(&H3C9), ChrW(&H3C2))
+    
+    GreekDia = VBA.Array(ChrW(&H386), ChrW(&H388), ChrW(&H389), ChrW(&H38A), ChrW(&H38C), ChrW(&H38E), ChrW(&H38F), _
+                        ChrW(&H3AC), ChrW(&H3AD), ChrW(&H3AE), ChrW(&H3AF), ChrW(&H3CC), ChrW(&H3CD), ChrW(&H3CE))
+    
+    GreekDia2 = VBA.Array(ChrW(&H3AA), ChrW(&H3AB), ChrW(&H3CA), ChrW(&H3CB))
+    
+    GreekDia3 = VBA.Array(ChrW(&H390), ChrW(&H3B0))
+    
+    Latin = VBA.Array("A", "B", "G", "D", "E", "Z", "H", "U", "I", "K", "L", _
+    "M", "N", "J", "O", "P", "R", "S", "T", "Y", "F", "X", "C", "V", _
+    "a", "b", "g", "d", "e", "z", "h", "u", "i", "k", "l", _
+    "m", "n", "j", "o", "p", "r", "s", "t", "y", "f", "x", "c", "v", "w")
+    
+    LatinDia = VBA.Array("A", "E", "H", "I", "O", "Y", "V", _
+                        "a", "e", "h", "i", "o", "y", "v")
+                        
+    LatinDia2 = VBA.Array("I", "Y", "i", "y")
+    
+    LatinDia3 = VBA.Array("i", "y")
+    
+    'text = UCase(text)
+    
+pl = Len(text)
+    
+ReDim V(pl - 1)
+    
+    For g = 1 To pl
+        letter = Mid(text, g, 1)
+        If letter = ";" Or letter = ":" Or letter = "W" Then
+            If g = pl Then ' last char (can't be a diacritic sign)
+               V(g - 1) = letter
+            Else
+                If Mid(text, g + 1, 1) = " " Then ' next char is a space (this is punctuation)
+                    V(g - 1) = letter
+                Else
+                    bDiacritic = True
+                    If letter = ";" Then
+                        DiaArraySize = UBound(GreekDia)
+                        DiaArrayType = ";"
+                    ElseIf letter = ":" Then
+                        DiaArrayType = ":"
+                        DiaArraySize = UBound(GreekDia2)
+                    ElseIf letter = "W" Then
+                        DiaArrayType = "W"
+                        DiaArraySize = UBound(GreekDia3)
+                    End If
+                End If
+            End If
+        Else
+            For gh = 0 To IIf(bDiacritic, DiaArraySize, UBound(Greek))
+                If bDiacritic And DiaArrayType = ";" Then
+                    If letter = LatinDia(gh) Then
+                        letter = GreekDia(gh)
+                        Exit For
+                    End If
+                ElseIf bDiacritic And DiaArrayType = ":" Then
+                    If letter = LatinDia2(gh) Then
+                        letter = GreekDia2(gh)
+                        Exit For
+                    End If
+                ElseIf bDiacritic And DiaArrayType = "W" Then
+                    If letter = LatinDia3(gh) Then
+                        letter = GreekDia3(gh)
+                        Exit For
+                    End If
+                Else
+                    If letter = Latin(gh) Then
+                        letter = Greek(gh)
+                        Exit For
+                    End If
+                End If
+                
+            Next
+            If bDiacritic Then bDiacritic = Not bDiacritic
+            V(g - 1) = letter
+        End If
+    Next
+    
+    myLatin = Join(V, "")
+    'myLatin = LCase(myLatin)
+    Selection.TypeText text:=myLatin
+    
+End Sub
